@@ -5,8 +5,12 @@ const http = require("http").Server(app);
 const socketio = require("socket.io")(http, { cors: { origin: "*" } });
 
 var count = 0;
-// app.get("/", (req, res) => res.send("lol"));
-app.use(express.static(path.join(__dirname, "dist", "spa")))
+
+app.use(express.static(path.join(__dirname, "dist", "spa")));
+
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, "dist", "spa", "index.html"));
+});
 
 const PORT = process.env.PORT || 8081
 
