@@ -121,7 +121,7 @@
 import { store } from "../store/index";
 
 const io = (window.io = require("socket.io-client"));
-var socket = io("ws://localhost:8081");
+var socket = io("ws://" + window.location.hostname);
 
 socket.on("message", msg => {
   store.state.messagesData.push(JSON.parse(msg));
