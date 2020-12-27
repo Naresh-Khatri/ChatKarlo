@@ -29,15 +29,16 @@ export default function(/* { ssrContext } */) {
 }
 export const store = new Vuex.Store({
   state: {
+    username:'',
     messagesData: [
-      {
-        name: "me",
-        text: "this was sent first",
-        stamp: "7 minutes ago",
-        sent: true,
-        id: "",
-        bgColor: "amber-7"
-      }
+      // {
+      //   name: "me",
+      //   text: "this was sent first",
+      //   stamp: "7 minutes ago",
+      //   sent: true,
+      //   id: "",
+      //   bgColor: "amber-7"
+      // }
     ]
   },
   getters:{
