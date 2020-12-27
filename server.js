@@ -6,10 +6,14 @@ const socketio = require("socket.io")(http, { cors: { origin: "*" } });
 
 var count = 0;
 
-app.use(express.static(path.join(__dirname, "dist", "spa")));
+
 
 app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname, "dist", "spa", "index.html"));
+  // return res.send(req.path);
+
+  if(req.path == "/") return res.sendFile("index.html", { root : path.join(__dirname, "dist/spa") });
+
+  res.sendFile(req.path,  { root : path.join(__dirname, "dist/spa") });
 });
 
 const PORT = process.env.PORT || 8081
