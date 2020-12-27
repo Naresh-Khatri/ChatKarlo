@@ -4,7 +4,7 @@ const http = require("http").Server(app);
 const socketio = require("socket.io")(http, { cors: { origin: "*" } });
 
 var count = 0;
-app.use(express.static('public'))
+app.use(express.static('dist/spa'))
 
 const PORT = process.env.PORT || 8081
 
