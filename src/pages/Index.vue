@@ -121,7 +121,7 @@
 import { store } from "../store/index";
 
 const io = (window.io = require("socket.io-client"));
-var socket = io("ws://" + window.location.hostname);
+var socket = io("wss://" + window.location.hostname); //wss = wss over https
 
 socket.on("message", msg => {
   store.state.messagesData.push(JSON.parse(msg));
