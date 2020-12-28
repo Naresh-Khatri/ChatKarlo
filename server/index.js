@@ -1,30 +1,38 @@
-const express = require("express");
+const express = require('express')
 const app = express()
-const http = require("http").Server(app);
-const socketio = require("socket.io")(http, { cors: { origin: "*" } });
-
-var count = 0;
+const http = require('http').Server(app)
+const socketio = require('socket.io')(http, { cors: { origin: '*' } })
 app.use(express.static('public'))
 
 const PORT = process.env.PORT || 8081
 
-socketio.on("connection", socket => {
-  count++;
-  console.log(`a user connected`);
-  socketio.emit("counter", { count: count });
-  console.log("connected count", count);
+var count = 0
 
-  socket.on("disconnect", ()=>{
-    count--;
-    console.log("user disconnected");
-    console.log("disconnected count", count);
-  });
+socketio.on('connection', (socket) => {
+  count++
+  console.log(`a user connected`)
+  socket.emit('counter', { count: count })
+  console.log('countering')
+  console.log('connected count', count)
 
-  socket.on("message", message => {
-    console.log(`${socket.id.substr(0, 2)} said ${JSON.stringify(message)}`);
-    socketio.emit("message", JSON.stringify(message));
-  });
-});
+  setInterval(() => {
+    socket.emit('counter', { count: count })
+  }, 500)
+  socket.on('typing', (data) => {
+    console.log(data.username + ' is typing')
+  })
 
+  socket.on('message', (message) => {
+    console.log(`${socket.id.substr(0, 2)} said ${JSON.stringify(message)}`)
+    socketio.emit('message', JSON.stringify(message))
+  })
 
-http.listen(PORT, () => console.log("listening on port " + PORT));
+  socket.on('disconnect', () => {
+    count--
+    socket.emit('counter', { count: count })
+    console.log('user disconnected')
+    console.log('disconnected count', count)
+  })
+})
+
+http.listen(PORT, () => console.log('listening on port ' + PORT))

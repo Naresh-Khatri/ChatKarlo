@@ -18,15 +18,19 @@ socketio.on("connection", socket => {
   socketio.emit("counter", { count: count });
   console.log("connected count", count);
 
+  socket.on('typing', (data)=> {
+    console.log(data.username + ' is typing')
+    socketio.emit('typing', data)
+  })
+  socket.on("message", message => {
+    console.log(`${socket.id.substr(0, 2)} said ${JSON.stringify(message)}`);
+    socketio.emit("message", JSON.stringify(message));
+  });
   socket.on("disconnect", ()=>{
     count--;
     console.log("user disconnected");
     console.log("disconnected count", count);
-  });
-
-  socket.on("message", message => {
-    console.log(`${socket.id.substr(0, 2)} said ${JSON.stringify(message)}`);
-    socketio.emit("message", JSON.stringify(message));
+    socketio.emit('counter', { count: count})
   });
 });
 
