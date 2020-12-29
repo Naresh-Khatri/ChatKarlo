@@ -22,7 +22,7 @@
             <q-list>
               <q-item clickable v-close-popup >
                 <q-item-section>
-                  <q-item-label>Photos</q-item-label>
+                  <q-item-label>onlineUsersList</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>

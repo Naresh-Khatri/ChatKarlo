@@ -1,7 +1,7 @@
 <template>
   <q-page class="flex-center page bg-grey-10">
     <div v-if="!hasUsername" class="q-pa-md">
-      <q-btn @click="dialog = true">start</q-btn>
+      <q-btn @click="dialog = true" color="primary">start</q-btn>
       <q-dialog v-model="dialog" persistent>
         <div
           style="background-color:#02d7f2;box-shadow: none;"
