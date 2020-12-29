@@ -30,7 +30,8 @@ export default function(/* { ssrContext } */) {
 export const store = new Vuex.Store({
   state: {
     username:'',
-    onlineUsers:0,
+    users:[],
+    usersCount:0,
     typingUsers: [],
     messagesData: [
       {
@@ -48,5 +49,6 @@ export const store = new Vuex.Store({
       return messagesData
     }
   },
+  
   mutations: {}
 });

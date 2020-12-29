@@ -16,6 +16,7 @@ socketio.on("connection", socket => {
   count++;
   console.log(`a user connected`);
   socketio.emit("counter", { count: count });
+  //socketio.emit("newConnection", { username:  });
   console.log("connected count", count);
 
   socket.on('typing', (data)=> {

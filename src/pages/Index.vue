@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex-center page" style="background:#333">
+  <q-page class="flex-center page bg-grey-10">
     <div v-if="!hasUsername" class="q-pa-md">
       <q-btn @click="dialog = true">start</q-btn>
       <q-dialog v-model="dialog" persistent>
@@ -75,10 +75,11 @@
             :bg-color="isOwner(message.id) ? 'positive' : 'white'"
           >
           </q-chat-message>
+        </div>
           <div
-            v-show="user == storeUsername"
+            v-show="user != storeUsername"
             v-for="(user, index) in typingUsers"
-            :key="index"
+            :key="index + user"
             style="color:white"
           >
             {{ user }}
@@ -86,13 +87,11 @@
               >(You)</span> -->
             <q-chat-message>
               <q-spinner-dots
-                v-if="!isOwner(message.id)"
                 size="3rem"
                 name="ewf"
               />
             </q-chat-message>
           </div>
-        </div>
       </div>
       <q-input
         @input="emitTyping()"
@@ -172,26 +171,23 @@ import { store } from "../store/index";
 const io = (window.io = require("socket.io-client"));
 if (process.env.DEBUGGING) {
   var socket = io("ws://localhost:8081");
-  setTimeout(() => {
-    store.state.username = "instance " + store.state.onlineUsers;
-  }, 500);
 } else var socket = io("wss://" + window.location.hostname); //wss = wss over https
 
 socket.on("message", msg => {
   store.state.messagesData.push(JSON.parse(msg));
 });
 socket.on("counter", data => {
-  console.log(data.count + " online");
-  store.state.onlineUsers = data.count;
+  store.state.usersCount = data.count;
+  
 });
 socket.on("typing", data => {
-  console.log(data);
-
   if (store.state.typingUsers.indexOf(data.username) == -1)
     store.state.typingUsers.push(data.username);
-  console.log(store.state.typingUsers + " is typing");
   setTimeout(() => {
-    store.state.typingUsers = [];
+    if(store.state.typingUsers.indexOf(store.state.typingUsers)){
+      store.state.typingUsers.pop(store.state.typingUsers);
+    }
+    else clearInterval()
   }, 3000);
 });
 
@@ -201,8 +197,8 @@ export default {
     return {
       msgtext: "",
       dialog: false,
-      hasUsername: true,
-      emojiDialog: true,
+      hasUsername: false,
+      emojiDialog: false,
       username: "",
       onlineCount: 0,
       emojis:['😂','😭','🥺','🤣','❤️','✨','😍','🙏','😊','🥰','🙄','🤔','🔥','🤤','👌']
@@ -220,18 +216,14 @@ export default {
     }
   },
   mounted() {
-    // setTimeout(() => {
-    //   this.messagesData.push({
-    //     name: "me",
-    //     text: "this was sent second",
-    //     stamp: "7 minutes ago",
-    //     sent: true,
-    //     id: "",
-    //     bgColor: "amber-7"
-    //   });
-    //   console.log(this.messagesData);
-    //   console.log(socket.id);
-    // }, 1000);
+    console.log('stored username = ' + localStorage.getItem('username'))
+    if(localStorage.getItem('username')){
+      this.hasUsername = true;
+      store.state.username = localStorage.getItem('username')
+      store.state.users.push(this.username)
+
+    }
+
   },
   methods: {
     isOwner(id) {
@@ -265,14 +257,13 @@ export default {
       this.emojiDialog = false
     },
     emitTyping() {
-      this.typingUsers.forEach(user => {
-        console.log(user);
-      });
       socket.emit("typing", { username: store.state.username, id: socket.id });
     },
     commitUsername() {
       store.state.username = this.username;
       this.hasUsername = true;
+      localStorage.setItem("username", this.username)
+      store.state.users.push(this.username)
     }
   }
 };
