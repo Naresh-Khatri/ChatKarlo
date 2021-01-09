@@ -65,7 +65,11 @@
               >(You)</span
             >
           </div>
-          <q-chat-message
+          <chatMessage
+            :text="message.text"
+            :sent="isOwner(message.id)"
+          ></chatMessage>
+          <!-- <q-chat-message
             class="text-box"
             :style="message.big ? 'font-size:180px' : 'font-size:25px'"
             :text="[...message.text]"
@@ -74,24 +78,22 @@
             :text-color="isOwner(message.id) ? 'white' : 'black'"
             :bg-color="isOwner(message.id) ? 'positive' : 'white'"
           >
+          </q-chat-message> -->
+        </div>
+        <!-- Typing detector-->
+        <div
+          v-show="user != storeUsername"
+          v-for="(user, index) in typingUsers"
+          :key="index + user"
+          style="color:white"
+        >
+          {{ user }}
+          <!-- <span v-if="isOwner(message.id)" style="color:lightgreen"
+              >(You)</span> -->
+          <q-chat-message>
+            <q-spinner-dots size="3rem" name="ewf" />
           </q-chat-message>
         </div>
-          <div
-            v-show="user != storeUsername"
-            v-for="(user, index) in typingUsers"
-            :key="index + user"
-            style="color:white"
-          >
-            {{ user }}
-            <!-- <span v-if="isOwner(message.id)" style="color:lightgreen"
-              >(You)</span> -->
-            <q-chat-message>
-              <q-spinner-dots
-                size="3rem"
-                name="ewf"
-              />
-            </q-chat-message>
-          </div>
       </div>
       <q-input
         @input="emitTyping()"
@@ -125,7 +127,13 @@
             </q-card-section>
 
             <q-card-section class="grid-container">
-              <q-avatar class="emoji-icons" v-for="(emoji, index) in emojis" :key="index" @click="sendEmoji(index)">{{emoji}}</q-avatar>
+              <q-avatar
+                class="emoji-icons"
+                v-for="(emoji, index) in emojis"
+                :key="index"
+                @click="sendEmoji(index)"
+                >{{ emoji }}</q-avatar
+              >
             </q-card-section>
           </q-card>
         </q-dialog>
@@ -168,6 +176,8 @@
 <script>
 import { store } from "../store/index";
 
+import chatMessage from "../components/chat-message.vue";
+
 const io = (window.io = require("socket.io-client"));
 if (process.env.DEBUGGING) {
   var socket = io("ws://localhost:8081");
@@ -178,21 +188,20 @@ socket.on("message", msg => {
 });
 socket.on("counter", data => {
   store.state.usersCount = data.count;
-  
 });
 socket.on("typing", data => {
   if (store.state.typingUsers.indexOf(data.username) == -1)
     store.state.typingUsers.push(data.username);
   setTimeout(() => {
-    if(store.state.typingUsers.indexOf(store.state.typingUsers)){
+    if (store.state.typingUsers.indexOf(store.state.typingUsers)) {
       store.state.typingUsers.pop(store.state.typingUsers);
-    }
-    else clearInterval()
+    } else clearInterval();
   }, 3000);
 });
 
 export default {
   name: "PageIndex",
+  components: { chatMessage },
   data() {
     return {
       msgtext: "",
@@ -201,7 +210,23 @@ export default {
       emojiDialog: false,
       username: "",
       onlineCount: 0,
-      emojis:['😂','😭','🥺','🤣','❤️','✨','😍','🙏','😊','🥰','🙄','🤔','🔥','🤤','👌']
+      emojis: [
+        "😂",
+        "😭",
+        "🥺",
+        "🤣",
+        "❤️",
+        "✨",
+        "😍",
+        "🙏",
+        "😊",
+        "🥰",
+        "🙄",
+        "🤔",
+        "🔥",
+        "🤤",
+        "👌"
+      ]
     };
   },
   computed: {
@@ -216,14 +241,12 @@ export default {
     }
   },
   mounted() {
-    console.log('stored username = ' + localStorage.getItem('username'))
-    if(localStorage.getItem('username')){
+    console.log("stored username = " + localStorage.getItem("username"));
+    if (localStorage.getItem("username")) {
       this.hasUsername = true;
-      store.state.username = localStorage.getItem('username')
-      store.state.users.push(this.username)
-
+      store.state.username = localStorage.getItem("username");
+      store.state.users.push(this.username);
     }
-
   },
   methods: {
     isOwner(id) {
@@ -245,16 +268,16 @@ export default {
       socket.emit("message", msgdata);
       this.msgtext = "";
     },
-    sendEmoji(index){
+    sendEmoji(index) {
       let msgdata = {
         name: store.state.username,
         text: [this.emojis[index]],
         stamp: "7 minutes ago",
         id: socket.id,
-        big: true,
+        big: true
       };
       socket.emit("message", msgdata);
-      this.emojiDialog = false
+      this.emojiDialog = false;
     },
     emitTyping() {
       socket.emit("typing", { username: store.state.username, id: socket.id });
@@ -262,8 +285,8 @@ export default {
     commitUsername() {
       store.state.username = this.username;
       this.hasUsername = true;
-      localStorage.setItem("username", this.username)
-      store.state.users.push(this.username)
+      localStorage.setItem("username", this.username);
+      store.state.users.push(this.username);
     }
   }
 };
@@ -287,13 +310,7 @@ export default {
 .chat-box::-webkit-scrollbar {
   display: none;
 }
-.text-box {
-  font-size: 25px;
-  border-top-left-radius: 50px;
-  border-top-right-radius: 50px;
-  border-bottom-right-radius: 50px;
-  border-bottom-left-radius: 50px;
-}
+
 .grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -304,13 +321,13 @@ export default {
     ". . ."
     ". . .";
 }
-.emoji-icons{
-  font-size:150px;
-  cursor:pointer;
+.emoji-icons {
+  font-size: 150px;
+  cursor: pointer;
 }
-.emoji-icons:hover{
-  transition:.2s;
-  filter:brightness(.6)
+.emoji-icons:hover {
+  transition: 0.2s;
+  filter: brightness(0.6);
 }
 
 .page {
