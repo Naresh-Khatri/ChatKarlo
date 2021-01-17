@@ -68,8 +68,8 @@
           <chatMessage
             :text="message.text"
             :sent="isOwner(message.id)"
-            :imgData='message.imgData'
-            :big='message.big'
+            :imgData="message.imgData"
+            :big="message.big"
           ></chatMessage>
           <!-- <q-chat-message
             class="text-box"
@@ -122,7 +122,7 @@
           </q-btn>
         </template>
         <q-dialog v-model="emojiDialog">
-          <q-card >
+          <q-card>
             <q-card-section class="row items-center q-pb-none">
               <div class="text-h6">Tap to send</div>
               <q-space />
@@ -190,6 +190,7 @@
 
 <script>
 import { store } from "../store/index";
+import { Notify } from "quasar";
 
 import chatMessage from "../components/chat-message.vue";
 
@@ -200,12 +201,11 @@ if (process.env.DEBUGGING) {
 
 socket.on("message", msg => {
   store.state.messagesData.push(JSON.parse(msg));
-  console.log(store.state.messagesData)
   scrollBottom();
 });
 socket.on("counter", data => {
   store.state.usersCount = data.count;
-  this.$q.notify({ type: "positive", message: "A new user joined chat" });
+  Notify.create({ type: "positive", message: "A new user joined chat" });
 });
 socket.on("typing", data => {
   if (store.state.typingUsers.indexOf(data.username) == -1)
@@ -298,11 +298,9 @@ export default {
     sendImage(e) {
       var files = e.target.files || e.dataTransfer.files;
       if (!files.length) return;
-      console.log(files[0]);
       var reader = new FileReader();
       reader.readAsDataURL(files[0]);
       reader.onload = e => {
-        console.log(reader.result);
         let msgdata = {
           name: store.state.username,
           text: [],
@@ -311,9 +309,8 @@ export default {
           big: false,
           imgData: reader.result
         };
-      socket.emit("message", msgdata);
+        socket.emit("message", msgdata);
       };
-
     },
     sendEmoji(index) {
       let msgdata = {
@@ -393,14 +390,14 @@ export default {
     bottom: 10px;
   }
   .grid-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr ;
-  gap: 0px 0px;
-  grid-template-areas:
-    ".  ."
-    ".  ."
-    ".  .";
-}
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0px 0px;
+    grid-template-areas:
+      ".  ."
+      ".  ."
+      ".  .";
+  }
 }
 </style>
