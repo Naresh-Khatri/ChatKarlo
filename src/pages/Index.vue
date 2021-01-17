@@ -45,7 +45,7 @@
       </q-dialog>
     </div>
 
-    <div v-else class="q-pa-md row justify-center chat-box">
+    <div v-else id="chat-box" class="q-pa-md row justify-center chat-box">
       <div style="width: 100%; max-width: 1000px; padding-bottom:150px">
         <div
           v-if="!messagesData"
@@ -55,7 +55,7 @@
         </div>
         <div v-for="(message, index) in messagesData" :key="index">
           <div
-            style="color:white"
+            style="color:white; margin-top:5px; margin-bottom:-3px"
             :style="
               isOwner(message.id) ? 'text-align:right' : 'text-align:left'
             "
@@ -68,6 +68,8 @@
           <chatMessage
             :text="message.text"
             :sent="isOwner(message.id)"
+            :imgData='message.imgData'
+            :big='message.big'
           ></chatMessage>
           <!-- <q-chat-message
             class="text-box"
@@ -102,6 +104,7 @@
         label-color="white"
         color="white"
         filled
+        rounded
         dark
         standout=""
         v-model="msgtext"
@@ -119,9 +122,9 @@
           </q-btn>
         </template>
         <q-dialog v-model="emojiDialog">
-          <q-card>
+          <q-card >
             <q-card-section class="row items-center q-pb-none">
-              <div class="text-h6">Close icon</div>
+              <div class="text-h6">Tap to send</div>
               <q-space />
               <q-btn icon="close" flat round dense v-close-popup />
             </q-card-section>
@@ -137,6 +140,18 @@
             </q-card-section>
           </q-card>
         </q-dialog>
+        <label for="img-input">
+          <input
+            id="img-input"
+            type="file"
+            accept="image/*"
+            @change="sendImage"
+            style="display:none"
+          />
+          <template>
+            <q-avatar icon="image" style="margin-top:4px" />
+          </template>
+        </label>
         <template v-slot:append>
           <q-btn
             round
@@ -180,14 +195,17 @@ import chatMessage from "../components/chat-message.vue";
 
 const io = (window.io = require("socket.io-client"));
 if (process.env.DEBUGGING) {
-  var socket = io("ws://localhost:8081");
+  var socket = io("ws://localhost:8069");
 } else var socket = io("wss://" + window.location.hostname); //wss = wss over https
 
 socket.on("message", msg => {
   store.state.messagesData.push(JSON.parse(msg));
+  console.log(store.state.messagesData)
+  scrollBottom();
 });
 socket.on("counter", data => {
   store.state.usersCount = data.count;
+  this.$q.notify({ type: "positive", message: "A new user joined chat" });
 });
 socket.on("typing", data => {
   if (store.state.typingUsers.indexOf(data.username) == -1)
@@ -198,6 +216,11 @@ socket.on("typing", data => {
     } else clearInterval();
   }, 3000);
 });
+
+function scrollBottom() {
+  const scrollElement = document.getElementById("chat-box");
+  scrollElement.scrollTop = scrollElement.scrollHeight;
+}
 
 export default {
   name: "PageIndex",
@@ -266,7 +289,31 @@ export default {
         big: false
       };
       socket.emit("message", msgdata);
+      socket.emit("typingEnd", {
+        username: store.state.username,
+        id: socket.id
+      });
       this.msgtext = "";
+    },
+    sendImage(e) {
+      var files = e.target.files || e.dataTransfer.files;
+      if (!files.length) return;
+      console.log(files[0]);
+      var reader = new FileReader();
+      reader.readAsDataURL(files[0]);
+      reader.onload = e => {
+        console.log(reader.result);
+        let msgdata = {
+          name: store.state.username,
+          text: [],
+          stamp: "7 minutes ago",
+          id: socket.id,
+          big: false,
+          imgData: reader.result
+        };
+      socket.emit("message", msgdata);
+      };
+
     },
     sendEmoji(index) {
       let msgdata = {
@@ -280,7 +327,10 @@ export default {
       this.emojiDialog = false;
     },
     emitTyping() {
-      socket.emit("typing", { username: store.state.username, id: socket.id });
+      socket.emit("typingStart", {
+        username: store.state.username,
+        id: socket.id
+      });
     },
     commitUsername() {
       store.state.username = this.username;
@@ -304,7 +354,7 @@ export default {
   width: 80%;
   height: 70vh;
   overflow: auto;
-  overflow-y: scroll;
+  overflow-y: auto;
   text-overflow: ellipsis;
 }
 .chat-box::-webkit-scrollbar {
@@ -342,5 +392,15 @@ export default {
   .input-field {
     bottom: 10px;
   }
+  .grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr ;
+  gap: 0px 0px;
+  grid-template-areas:
+    ".  ."
+    ".  ."
+    ".  .";
+}
 }
 </style>

@@ -10,7 +10,7 @@ var count = 0;
 app.use(express.static(path.join(__dirname, "dist", "spa")));
 
 
-const PORT = process.env.PORT || 8081
+const PORT = process.env.PORT || 8069
 
 socketio.on("connection", socket => {
   count++;
@@ -19,14 +19,24 @@ socketio.on("connection", socket => {
   //socketio.emit("newConnection", { username:  });
   console.log("connected count", count);
 
-  socket.on('typing', (data)=> {
+  socket.on('typingStart', (data)=> {
     console.log(data.username + ' is typing')
-    socketio.emit('typing', data)
+    socketio.emit('typingStart', data)
+  })
+  socket.on('typingEnd', (data)=> {
+    socketio.emit('typingEnd', data)
   })
   socket.on("message", message => {
-    console.log(`${socket.id.substr(0, 2)} said ${JSON.stringify(message)}`);
+    console.log(`${socket.id.substr(0, 2)} said ${JSON.stringify(message.text)}`);
+    if(message.imgData)
+      console.log(`${socket.id.substr(0, 2)} sent an img`);
+      
     socketio.emit("message", JSON.stringify(message));
   });
+  // socket.on("imageMessage", imgData => {
+  //   console.log(`${socket.id.substr(0, 2)} sent and image`);
+  //   socketio.emit("imageMessage", JSON.stringify(imgData));
+  // });
   socket.on("disconnect", ()=>{
     count--;
     console.log("user disconnected");

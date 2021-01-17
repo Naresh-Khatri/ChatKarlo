@@ -1,14 +1,21 @@
 <template>
   <div style="display:flex; position:relative;">
-    <div :class="sent ? 'sent-text-box' : 'received-text-box'">
+    <!-- <q-avatar icon="profile" color="primary" class="q-pt-md q-ma-sm" /> -->
+    <div
+      :style="big ? 'font-size:180px' : 'font-size:25px'"
+      :class="sent ? 'sent-text-box' : 'received-text-box'"
+    >
       {{ text[0] }}
+      <div v-if="imgData">
+        <img style="max-width:100%" :src="imgData" />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  props: ["text", "sent"],
+  props: ["text", "sent", "big", "imgData"],
   data() {
     return {};
   }
