@@ -2,12 +2,34 @@
   <div style="display:flex; position:relative;">
     <!-- <q-avatar icon="profile" color="primary" class="q-pt-md q-ma-sm" /> -->
     <div
+      style="display:f lex; position:relat ive"
       :style="big ? 'font-size:180px' : 'font-size:25px'"
-      :class="sent ? 'sent-text-box' : 'received-text-box'"
+      :class="
+        imgData && sent
+          ? 'right'
+          : imgData && !sent
+          ? ''
+          : sent
+          ? 'sent-text-box'
+          : 'received-text-box'
+      "
     >
-      {{ text[0] }}
+      <div v-if="text">
+        {{ text[0] }}
+      </div>
+
       <div v-if="imgData">
-        <img style="max-width:100%" :src="imgData" />
+        <img
+          style="max-width:85%; border-radius:20px;"
+          :class="sent ? 'right' : 'left'"
+          :src="imgData"
+        />
+      </div>
+      <div
+        style="display:block;font-size:12px;color:white"
+        :class="sent ? 'right' : 'left'"
+      >
+        {{ stamp }}
       </div>
     </div>
   </div>
@@ -15,7 +37,7 @@
 
 <script>
 export default {
-  props: ["text", "sent", "big", "imgData"],
+  props: ["text", "sent", "stamp", "big", "imgData"],
   data() {
     return {};
   }
@@ -33,7 +55,7 @@ export default {
   border-radius: 25px;
 }
 .sent-text-box::after {
-  content: "\A";
+  content: "";
   white-space: pre;
 }
 .sent-text-box::before {
@@ -44,21 +66,26 @@ export default {
   border-top: 30px solid rgba(0, 0, 0, 0);
   border-right: 30px solid #00c3ff;
 }
+.right {
+  margin-left: auto;
+  float: right;
+}
+.left {
+}
+
 .received-text-box {
   font-size: 25px;
 
-  display: inline-flex;
-
   position: relative;
   color: #fff;
-  background: #494949;
+  background: rgb(156, 97, 97);
   min-width: 20px;
   max-width: 80%;
   padding: 10px 20px;
   border-radius: 25px;
 }
 .received-text-box::after {
-  content: "\A";
+  content: "";
   white-space: pre;
 }
 .received-text-box::before {
@@ -67,7 +94,8 @@ export default {
   bottom: 0;
   left: 0;
   border-top: 30px solid rgba(0, 0, 0, 0);
-  border-left: 30px solid #494949;
+  border-left: 30px solid rgb(156, 97, 97);
+
   width: 0px;
 }
 </style>

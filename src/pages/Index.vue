@@ -70,6 +70,7 @@
             :sent="isOwner(message.id)"
             :imgData="message.imgData"
             :big="message.big"
+            :stamp="message.stamp"
           ></chatMessage>
           <!-- <q-chat-message
             class="text-box"
@@ -191,10 +192,17 @@
 <script>
 import { store } from "../store/index";
 import { Notify } from "quasar";
+import imageCompression from "browser-image-compression";
+import axios from 'axios'
+import moment from 'moment'
 
 import chatMessage from "../components/chat-message.vue";
+import emojiCard from "../components/emoji-card.vue";
 
+var sentSound = new Audio(require("../assets/sent.wav"));
+var receivedSound = new Audio(require("../assets/received.wav"));
 const io = (window.io = require("socket.io-client"));
+
 if (process.env.DEBUGGING) {
   var socket = io("ws://localhost:8069");
 } else var socket = io("wss://" + window.location.hostname); //wss = wss over https
@@ -202,10 +210,15 @@ if (process.env.DEBUGGING) {
 socket.on("message", msg => {
   store.state.messagesData.push(JSON.parse(msg));
   scrollBottom();
+  if (msg.id == socket.id) receivedSound.play();
 });
 socket.on("counter", data => {
+  if (data.count > 1)
+    Notify.create({ type: "positive", message: "A new user joined chat", position:'top' });
+  if (store.state.usersCount > data.count)
+    Notify.create({ type: "negative", message: "A new user left chat", position:'top' });
+
   store.state.usersCount = data.count;
-  Notify.create({ type: "positive", message: "A new user joined chat" });
 });
 socket.on("typing", data => {
   if (store.state.typingUsers.indexOf(data.username) == -1)
@@ -216,15 +229,19 @@ socket.on("typing", data => {
     } else clearInterval();
   }, 3000);
 });
-
+socket.on("connect", ()=>{
+  
+  //socket.emit("send-userinfo", {username:'',id:socket.io});
+})
 function scrollBottom() {
   const scrollElement = document.getElementById("chat-box");
   scrollElement.scrollTop = scrollElement.scrollHeight;
+  console.log(scrollElement.scrollHeight)
 }
 
 export default {
   name: "PageIndex",
-  components: { chatMessage },
+  components: { chatMessage,  },
   data() {
     return {
       msgtext: "",
@@ -264,11 +281,18 @@ export default {
     }
   },
   mounted() {
+    console.log("id = " + socket.id)
     console.log("stored username = " + localStorage.getItem("username"));
     if (localStorage.getItem("username")) {
       this.hasUsername = true;
       store.state.username = localStorage.getItem("username");
       store.state.users.push(this.username);
+      //socket.emit('send-nickname', store.state.username)
+      let userinfo = {
+        username: store.state.username, 
+        id: socket.id
+      };
+       socket.emit("send-userinfo", store.state.username);
     }
   },
   methods: {
@@ -280,31 +304,57 @@ export default {
         this.$q.notify({ type: "negative", message: "input cannot be blank" });
         return;
       }
+      sentSound.play();
 
       let msgdata = {
         name: store.state.username,
         text: [this.msgtext],
-        stamp: "7 minutes ago",
+        stamp: moment().format('LT'),
         id: socket.id,
         big: false
       };
       socket.emit("message", msgdata);
-      socket.emit("typingEnd", {
-        username: store.state.username,
-        id: socket.id
-      });
-      this.msgtext = "";
+      // socket.emit("typingEnd", {
+      //   username: store.state.username,
+      //   id: socket.id
+      // });
+       this.msgtext = "";
     },
-    sendImage(e) {
-      var files = e.target.files || e.dataTransfer.files;
-      if (!files.length) return;
+
+    async sendImage(e) {
+      // var files = e.target.files || e.dataTransfer.files;
+      // if (!files.length) return;
+
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 640,
+        useWebWorker: true
+      };
+      try {
+        console.log(e.target.files[0]);
+        const compressedFile = await imageCompression(
+          e.target.files[0],
+          options
+        );
+        console.log(
+          "compressedFile instanceof Blob",
+          compressedFile instanceof Blob
+        ); // true
+        console.log(
+          `compressedFile size ${compressedFile.size / 1024 / 1024} MB`
+        ); // smaller than maxSizeMB
+        await this.uploadToServer(compressedFile);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async uploadToServer(img) {
       var reader = new FileReader();
-      reader.readAsDataURL(files[0]);
+      reader.readAsDataURL(img);
       reader.onload = e => {
         let msgdata = {
           name: store.state.username,
-          text: [],
-          stamp: "7 minutes ago",
+          stamp:moment().format('LT'),
           id: socket.id,
           big: false,
           imgData: reader.result
@@ -316,7 +366,7 @@ export default {
       let msgdata = {
         name: store.state.username,
         text: [this.emojis[index]],
-        stamp: "7 minutes ago",
+        stamp: moment().format('LT'),
         id: socket.id,
         big: true
       };
@@ -324,7 +374,7 @@ export default {
       this.emojiDialog = false;
     },
     emitTyping() {
-      socket.emit("typingStart", {
+      socket.emit("typing", {
         username: store.state.username,
         id: socket.id
       });
