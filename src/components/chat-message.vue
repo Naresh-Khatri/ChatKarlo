@@ -15,7 +15,7 @@
       "
     >
       <div v-if="text">
-        {{ text[0] }}
+        {{ text }}
       </div>
 
       <div v-if="imgData">

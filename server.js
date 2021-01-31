@@ -14,6 +14,10 @@ const PORT = process.env.PORT || 8069;
 socketio.on("connection", socket => {
   count++;
   console.log(`a user connected`);
+  socketio.on("newConnection",()=>{ 
+    "A User joined the chat"
+    
+  })
   socketio.emit("counter", { count: count });
   //socketio.emit("newConnection", { username:  });
   console.log("connected count", count);
@@ -22,16 +26,16 @@ socketio.on("connection", socket => {
     console.log(data.username + " is typing");
     socket.broadcast.emit("typing", data);
   });
-  socket.on("typingEnd", data => {
-    socketio.broadcast.emit("typingEnd", data);
-  });
-  socket.on("send-userinfo", userinfo => {
-    socket.nickname = userinfo;
-    console.log(socket.nickname + "senddfs");
-  });
-  socket.on("send-nickname", name => {
-    console.log(name);
-  });
+  // socket.on("typingEnd", data => {
+  //   socketio.broadcast.emit("typingEnd", data);
+  // });
+  // socket.on("send-userinfo", userinfo => {
+  //   socket.nickname = userinfo;
+  //   console.log(socket.nickname + "senddfs");
+  // });
+  // socket.on("send-nickname", name => {
+  //   console.log(name);
+  // });
   socket.on("message", message => {
     console.log(
       `${socket.id.substr(0, 2)} said ${JSON.stringify(message.text)}`

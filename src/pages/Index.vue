@@ -229,6 +229,7 @@ socket.on("typing", data => {
     } else clearInterval();
   }, 3000);
 });
+socket.on('newConnection', )
 socket.on("connect", ()=>{
   
   //socket.emit("send-userinfo", {username:'',id:socket.io});
@@ -288,11 +289,11 @@ export default {
       store.state.username = localStorage.getItem("username");
       store.state.users.push(this.username);
       //socket.emit('send-nickname', store.state.username)
-      let userinfo = {
-        username: store.state.username, 
-        id: socket.id
-      };
-       socket.emit("send-userinfo", store.state.username);
+      // let userinfo = {
+      //   username: store.state.username, 
+      //   id: socket.id
+      // };
+       //socket.emit("send-userinfo", store.state.username);
     }
   },
   methods: {
@@ -308,11 +309,12 @@ export default {
 
       let msgdata = {
         name: store.state.username,
-        text: [this.msgtext],
+        //text: [this.msgtext],
         stamp: moment().format('LT'),
         id: socket.id,
         big: false
       };
+      console.log(store.state.messagesData[-1].id)
       socket.emit("message", msgdata);
       // socket.emit("typingEnd", {
       //   username: store.state.username,
@@ -366,7 +368,7 @@ export default {
       let msgdata = {
         name: store.state.username,
         text: [this.emojis[index]],
-        stamp: moment().format('LT'),
+        stamp: moment().format('LT')  ,
         id: socket.id,
         big: true
       };
